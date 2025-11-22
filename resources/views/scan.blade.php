@@ -66,7 +66,8 @@
                     icon: 'error',
                     //confirmButtonText: 'OK, Scan Lanjut',
                     timer: 2000, // Otomatis tutup setelah 2 detik
-                    confirmButtonColor: '#d33'
+                    showConfirmButton: false
+                    //confirmButtonColor: '#d33'
                 }).then(() => {
                     // Resume scanner setelah tombol OK ditekan
                     try { html5QrcodeScanner.resume(); } catch(e){}

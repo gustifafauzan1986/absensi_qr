@@ -5,6 +5,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Models\Student;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Http\Controllers\StudentImportController;
+use App\Http\Controllers\ReportController;
 
 Route::view('/', 'welcome');
 
@@ -47,4 +48,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/import-students', [StudentImportController::class, 'index'])->name('students.import');
     Route::post('/import-students', [StudentImportController::class, 'store'])->name('students.import.store');
+
+    Route::get('/report', [ReportController::class, 'index'])->name('report.index');
+    Route::post('/report/print', [ReportController::class, 'print'])->name('report.print');
 });
