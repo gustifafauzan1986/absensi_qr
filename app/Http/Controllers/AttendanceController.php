@@ -11,66 +11,64 @@ use Illuminate\Support\Facades\Auth;
 
 class AttendanceController extends Controller
 {
-    public function index()
+    public function index($schedule_id)
     {
-        return view('scan');
+        //dd($schedule_id);
+        // Cari jadwal berdasarkan ID, pastikan milik guru yang login (Security)
+        $schedule = Schedule::where('id', $schedule_id)
+                    //->where('teacher_id', Auth::id())
+                    ->firstOrFail();
+
+        // Kirim data jadwal ke view scan
+        //dd($schedule);;
+        return view('scan', compact('schedule'));
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'nis' => 'required'
-        ]);
+{
+    $request->validate([
+        'nis' => 'required',
+        'schedule_id' => 'required|exists:schedules,id'
+    ]);
 
-        // 1. Cari Siswa
-        $student = Student::where('nis', $request->nis)->first();
-        if (!$student) {
-            return response()->json(['status' => 'error', 'message' => 'Siswa tidak ditemukan!']);
-        }
-
-        // 2. Cari Jadwal Aktif Guru yang sedang Login
-        // Asumsi: Guru sudah login. Kita cari jadwal hari ini, di jam sekarang.
-        $now = Carbon::now();
-        $dayMap = [
-            'Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa',
-            'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'
-        ];
-        $today = $dayMap[$now->format('l')];
-
-        // Cari jadwal milik guru (Auth::id()) yang harinya sesuai dan jamnya masuk rentang
-        $schedule = Schedule::where('teacher_id', Auth::id() ?? 1) // Ganti Auth::id() jika sudah pakai login
-                    ->where('day', $today)
-                    ->where('start_time', '<=', $now->format('H:i:s'))
-                    ->where('end_time', '>=', $now->format('H:i:s'))
-                    ->first();
-
-        if (!$schedule) {
-            return response()->json(['status' => 'error', 'message' => 'Tidak ada jadwal mengajar aktif saat ini untuk Anda!']);
-        }
-
-        // 3. Cek Duplikasi Absensi
-        $existing = Attendance::where('student_id', $student->id)
-                    ->where('schedule_id', $schedule->id)
-                    ->where('date', $now->format('Y-m-d'))
-                    ->first();
-
-        if ($existing) {
-            return response()->json(['status' => 'error', 'message' => 'Siswa sudah absen sebelumnya!']);
-        }
-
-        // 4. Simpan Absensi
-        Attendance::create([
-            'student_id' => $student->id,
-            'schedule_id' => $schedule->id,
-            'date' => $now->format('Y-m-d'),
-            'check_in_time' => $now->format('H:i:s'),
-            'status' => 'hadir' // Bisa dikembangkan logika terlambat jika > 15 menit
-        ]);
-
-        return response()->json([
-            'status' => 'success', 
-            'message' => 'Absensi Berhasil', 
-            'student' => $student->name
-        ]);
+    // 1. Cari Siswa
+    $student = Student::where('nis', $request->nis)->first();
+    if (!$student) {
+        return response()->json(['status' => 'error', 'message' => 'Siswa tidak ditemukan!']);
     }
+
+    // 2. Validasi Jadwal (Pastikan jadwal ini milik guru yang sedang login)
+    $schedule = Schedule::where('id', $request->schedule_id)
+                ->where('teacher_id', Auth::id())
+                ->first();
+
+    if (!$schedule) {
+        return response()->json(['status' => 'error', 'message' => 'Jadwal tidak valid!']);
+    }
+
+    // 3. Cek Duplikasi (Siswa sudah scan di jadwal ID ini?)
+    $existing = Attendance::where('student_id', $student->id)
+                ->where('schedule_id', $schedule->id) // Cek spesifik ID jadwal
+                ->where('date', date('Y-m-d'))
+                ->first();
+
+    if ($existing) {
+        return response()->json(['status' => 'error', 'message' => 'Siswa sudah absen!']);
+    }
+
+    // 4. Simpan
+    Attendance::create([
+        'student_id' => $student->id,
+        'schedule_id' => $schedule->id,
+        'date' => date('Y-m-d'),
+        'check_in_time' => date('H:i:s'),
+        'status' => 'hadir'
+    ]);
+
+    return response()->json([
+        'status' => 'success', 
+        'message' => 'Berhasil', 
+        'student' => $student->name
+    ]);
+}
 }

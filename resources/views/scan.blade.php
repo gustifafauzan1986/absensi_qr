@@ -5,6 +5,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
+<div class="alert alert-info text-center">
+    Mengabsen Kelas: <strong>{{ $schedule->class_name }}</strong> <br>
+    Mapel: {{ $schedule->subject_name }}
+</div>
 <body>
 <div class="container mt-5">
     <h2 class="text-center">Scanner Absensi Kelas</h2>
@@ -22,32 +26,65 @@
 
 <script>
     function onScanSuccess(decodedText, decodedResult) {
-        // Mainkan suara beep (opsional)
-        // var audio = new Audio('beep.mp3'); audio.play();
+        // 1. Pause scanner dulu agar tidak scan berulang-ulang secepat kilat
+    try {
+        html5QrcodeScanner.pause(); 
+    } catch(e) { 
+        // Abaikan error jika scanner sedang tidak aktif (misal upload file)
+    }
 
-        // Kirim data ke Server
-        $.ajax({
-            url: "{{ route('scan.store') }}",
-            type: "POST",
-            data: {
-                _token: $('meta[name="csrf-token"]').attr('content'),
-                nis: decodedText // Data hasil scan (NIS)
-            },
-            success: function(response) {
-                if(response.status == 'success') {
-                    $('#result').removeClass('d-none alert-danger').addClass('alert-success').text(response.message + ' - ' + response.student);
-                } else {
-                    $('#result').removeClass('d-none alert-success').addClass('alert-danger').text(response.message);
-                }
-                
-                // Jeda 3 detik sebelum scan berikutnya agar tidak double input cepat
-                html5QrcodeScanner.pause();
-                setTimeout(function() { html5QrcodeScanner.resume(); }, 3000);
-            },
-            error: function(err) {
-                console.log(err);
+    $.ajax({
+        url: "{{ route('scan.store') }}",
+        type: "POST",
+        data: {
+            _token: $('meta[name="csrf-token"]').attr('content'),
+            nis: decodedText,
+            schedule_id: "{{ $schedule->id }}" 
+        },
+        success: function(response) {
+            if(response.status == 'success') {
+                // --- A. SCAN BERHASIL (Hadir) ---
+                Swal.fire({
+                    title: 'BERHASIL!',
+                    text: response.message + ' : ' + response.student,
+                    icon: 'success',
+                    timer: 2000, // Otomatis tutup setelah 2 detik
+                    showConfirmButton: false
+                }).then(() => {
+                    // Resume scanner setelah alert tutup
+                    try { html5QrcodeScanner.resume(); } catch(e){}
+                });
+
+                // Optional: Mainkan suara beep
+                // var audio = new Audio('path/to/beep.mp3'); audio.play();
+
+            } else {
+                // --- B. SCAN GAGAL (Sudah Absen / Siswa Tidak Dikenal) ---
+                Swal.fire({
+                    title: 'GAGAL!',
+                    text: response.message,
+                    icon: 'error',
+                    //confirmButtonText: 'OK, Scan Lanjut',
+                    timer: 2000, // Otomatis tutup setelah 2 detik
+                    confirmButtonColor: '#d33'
+                }).then(() => {
+                    // Resume scanner setelah tombol OK ditekan
+                    try { html5QrcodeScanner.resume(); } catch(e){}
+                });
             }
-        });
+        },
+        error: function(xhr) {
+            // --- C. ERROR SERVER (500/404) ---
+            Swal.fire({
+                title: 'Error Sistem',
+                text: 'Terjadi kesalahan koneksi atau server.',
+                icon: 'warning',
+                confirmButtonText: 'Coba Lagi'
+            }).then(() => {
+                try { html5QrcodeScanner.resume(); } catch(e){}
+            });
+        }
+    });
     }
 
     function onScanFailure(error) {
@@ -58,5 +95,6 @@
         "reader", { fps: 10, qrbox: 250 });
     html5QrcodeScanner.render(onScanSuccess, onScanFailure);
 </script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 </html>
