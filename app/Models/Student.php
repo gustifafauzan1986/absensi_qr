@@ -9,4 +9,9 @@ class Student extends Model
 {
     use HasUuid; // <--- 2. Pasang Trait
     protected $guarded = [];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

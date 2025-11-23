@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\StudentImport;
+// --- TAMBAHKAN BARIS INI ---
+use Illuminate\Support\Facades\Artisan; 
 
 class StudentImportController extends Controller
 {
@@ -22,6 +24,9 @@ class StudentImportController extends Controller
 
         // Proses Import
         Excel::import(new StudentImport, $request->file('file'));
+        
+        // --- TAMBAHAN: Panggil Command Generator ---
+        Artisan::call('siswa:generate-users');
 
         return redirect()->back()->with('success', 'Data Siswa Berhasil Diimport!');
     }

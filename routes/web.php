@@ -7,6 +7,8 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Http\Controllers\StudentImportController;
 use App\Http\Controllers\ReportController;
 
+use App\Http\Controllers\UserImportController;
+
 Route::view('/', 'welcome');
 
 Route::view('dashboard', 'dashboard')
@@ -53,5 +55,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/report', [ReportController::class, 'index'])->name('report.index');
         Route::post('/report/print', [ReportController::class, 'print'])->name('report.print');
     });
+
+    Route::middleware(['role:admin'])->group(function () {
+    
+    // ... route import siswa yang lama ...
+
+    // ROUTE BARU: IMPORT USER
+    Route::get('/import-users', [UserImportController::class, 'index'])->name('users.import');
+    Route::post('/import-users', [UserImportController::class, 'store'])->name('users.import.store');
+    
+});
     
 });
