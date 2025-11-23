@@ -9,4 +9,11 @@ class Schedule extends Model
 {
     use HasUuid; // <--- 2. Pasang Trait
     protected $guarded = [];
+
+    public function classroom() 
+    {
+        return $this->belongsTo(Classroom::class);
+    }
+    
+    
 }

@@ -15,7 +15,8 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('nis')->unique(); // Ini yang akan jadi isi QR Code
             $table->string('name');
-            $table->string('class_name'); // Contoh: XII TKJ 1
+            // Ganti $table->string('class_name'); Menjadi:
+            $table->foreignUuid('classroom_id')->constrained('classrooms')->onDelete('cascade');
             $table->timestamps();
             });
     }

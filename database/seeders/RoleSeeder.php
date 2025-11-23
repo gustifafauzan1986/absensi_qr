@@ -37,23 +37,23 @@ class RoleSeeder extends Seeder
 
         // 4. Buat User Demo (Opsional, jika database kosong)
         
-        // Akun Admin
-        $admin = User::create([
-            'id' => Str::uuid(),
-            'name' => 'Administrator',
-            'email' => 'admin@sekolah.com',
-            'password' => bcrypt('password')
-        ]);
-        $admin->assignRole('admin');
+        // // Akun Admin
+        // $admin = User::create([
+        //     'id' => Str::uuid(),
+        //     'name' => 'Administrator',
+        //     'email' => 'admin@sekolah.com',
+        //     'password' => bcrypt('password')
+        // ]);
+        // $admin->assignRole('admin');
 
         // Akun Guru
-        $guru = User::create([
-            'id' => Str::uuid(),
-            'name' => 'Pak Budi',
-            'email' => 'guru@sekolah.com',
-            'password' => bcrypt('password')
-        ]);
-        $guru->assignRole('guru');
+        // $guru = User::create([
+        //     'id' => Str::uuid(),
+        //     'name' => 'Pak Budi',
+        //     'email' => 'guru@sekolah.com',
+        //     'password' => bcrypt('password')
+        // ]);
+        // $guru->assignRole('guru');
 
     }
 }

@@ -25,7 +25,7 @@ Route::view('profile', 'profile')
 require __DIR__.'/auth.php';
 
 Route::middleware(['auth'])->group(function () {
-    Route::middleware(['role:admin'])->group(function () {
+    Route::middleware(['role:guru|admin'])->group(function () {
         // Halaman Scanner (Hanya bisa diakses Guru yang login)
         Route::get('/scan/{schedule_id}', [AttendanceController::class, 'index'])->name('scan.index');
         // Proses Data Scan (Ajax)

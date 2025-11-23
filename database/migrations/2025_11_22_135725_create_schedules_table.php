@@ -16,6 +16,7 @@ return new class extends Migration
            // Foreign Key ke Users (Guru) juga harus UUID
             // Gunakan foreignUuid(), BUKAN foreignId()
             $table->foreignUuid('teacher_id')->constrained('users')->onDelete('cascade');
+            $table->foreignUuid('classroom_id')->constrained('classrooms')->onDelete('cascade');
             $table->string('subject_name');
             $table->string('day'); // Senin, Selasa, dst
             $table->time('start_time');
