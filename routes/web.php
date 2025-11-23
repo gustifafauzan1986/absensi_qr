@@ -7,6 +7,9 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Http\Controllers\StudentImportController;
 use App\Http\Controllers\ReportController;
 
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\PermissionController;
+
 use App\Http\Controllers\UserImportController;
 
 Route::view('/', 'welcome');
@@ -22,16 +25,18 @@ Route::view('profile', 'profile')
 require __DIR__.'/auth.php';
 
 Route::middleware(['auth'])->group(function () {
-    // Halaman Scanner (Hanya bisa diakses Guru yang login)
-    Route::get('/scan/{schedule_id}', [AttendanceController::class, 'index'])->name('scan.index');
-    // Proses Data Scan (Ajax)
-    Route::post('/scan/store', [AttendanceController::class, 'store'])->name('scan.store');
+    Route::middleware(['role:admin'])->group(function () {
+        // Halaman Scanner (Hanya bisa diakses Guru yang login)
+        Route::get('/scan/{schedule_id}', [AttendanceController::class, 'index'])->name('scan.index');
+        // Proses Data Scan (Ajax)
+        Route::post('/scan/store', [AttendanceController::class, 'store'])->name('scan.store');
 
 
-    Route::get('/student-qr/{id}', function ($id) {
-        $student = Student::findOrFail($id);
-        // QR Code berisi NIS siswa
-        return QrCode::size(300)->generate($student->nis);
+        Route::get('/student-qr/{id}', function ($id) {
+            $student = Student::findOrFail($id);
+            // QR Code berisi NIS siswa
+            return QrCode::size(300)->generate($student->nis);
+        });
     });
 
     // Route untuk melihat satu kartu siswa (untuk testing)
@@ -63,6 +68,11 @@ Route::middleware(['auth'])->group(function () {
     // ROUTE BARU: IMPORT USER
     Route::get('/import-users', [UserImportController::class, 'index'])->name('users.import');
     Route::post('/import-users', [UserImportController::class, 'store'])->name('users.import.store');
+
+    
+    // ROUTE MANAGE ROLE (Resourceful Route)
+    Route::resource('roles', RoleController::class);
+    Route::resource('permissions', PermissionController::class);
     
 });
     
